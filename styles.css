@@ -1,0 +1,148 @@
+/* styles.css */
+#gemini-nav-bar {
+    position: fixed;
+    top: 60px;       /* Assuming Gemini header is 60px */
+    right: 0px;      /* Flush to the right edge */
+    width: 250px; /* Adjust width as needed */
+    height: calc(100vh - 60px); /* Full viewport height below the header */
+    overflow-y: auto;
+    background-color: #202124; /* Dark, neutral background */
+    border: none; /* Reset existing border */
+    border-left: 1px solid #4a4a4a; /* New border for sidebar look */
+    border-radius: 0; /* Sharp corners for a column */
+    padding: 10px;
+    z-index: 999;     /* High enough, but allows for main content adjustment */
+    box-shadow: -2px 0 5px rgba(0,0,0,0.1); /* Shadow on the left side */
+    font-family: 'Google Sans', Roboto, Arial, sans-serif; /* Match Gemini's font if possible */
+    transition: width 0.3s ease-in-out, padding 0.3s ease-in-out; /* For smooth collapse */
+}
+
+#gemini-nav-bar h3 {
+    display: flex; /* To align title and button */
+    justify-content: space-between; /* Pushes button to the right */
+    align-items: center;
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 16px;
+    color: #e8eaed; /* Light text for dark theme */
+    border-bottom: 1px solid #3c4043;
+    padding-bottom: 5px;
+}
+
+.nav-item {
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    border-radius: 6px;
+    font-size: 13px;
+    line-height: 1.4;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border: 1px solid transparent; /* For hover/active state */
+}
+
+.nav-item:hover {
+    background-color: #3c4043; /* Darker gray on hover */
+    border-color: #5f6368;
+}
+
+.nav-item.query {
+    background-color: #282a2d; /* Darker background for queries */
+    color: #e8eaed; /* Lighter text for queries */
+    border-left: 3px solid #8ab4f8; /* Lighter blue left border for queries */
+}
+
+.nav-item.response {
+    background-color: #2f3134; /* Dark background for responses */
+    color: #bdc1c6; /* Lighter grey text for responses */
+    border-left: 3px solid #81c995; /* Lighter green left border for responses */
+    margin-bottom: 12px; /* Add more space after responses */
+}
+
+.nav-item.active {
+    background-color: #8ab4f8;
+    color: #202124;
+    font-weight: 500;
+}
+
+/* Scrollbar styling for webkit browsers */
+#gemini-nav-bar::-webkit-scrollbar {
+    width: 8px;
+}
+
+#gemini-nav-bar::-webkit-scrollbar-track {
+    background: #202124;
+    border-radius: 8px;
+}
+
+#gemini-nav-bar::-webkit-scrollbar-thumb {
+    background: #5f6368;
+    border-radius: 8px;
+}
+
+#gemini-nav-bar::-webkit-scrollbar-thumb:hover {
+    background: #9aa0a6;
+}
+
+/* Collapse Button (within Navbar) */
+#gemini-nav-collapse-btn {
+    cursor: pointer;
+    font-size: 20px;
+    padding: 0 5px;
+    margin-left: 10px;
+    line-height: 1;
+    color: #bdc1c6; /* Light grey to match other text */
+    transition: color 0.2s ease-in-out;
+}
+
+#gemini-nav-collapse-btn:hover {
+    color: #e8eaed; /* Brighter on hover */
+}
+
+/* Expand Button (Fixed to edge) */
+#gemini-nav-expand-btn {
+    position: fixed;
+    top: 70px; /* Align with where navbar top would be */
+    right: 10px;
+    z-index: 1000; /* Above everything when navbar is collapsed */
+    background-color: #2f3134; /* Dark background */
+    color: #e8eaed; /* Light text */
+    border: 1px solid #5f6368;
+    border-radius: 50%; /* Circular button */
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    display: none; /* Hidden by default */
+    transition: background-color 0.2s ease-in-out;
+}
+
+#gemini-nav-expand-btn:hover {
+    background-color: #3c4043;
+}
+
+/* Styles for when the navbar is collapsed */
+#gemini-nav-bar.collapsed {
+    width: 0;
+    padding-left: 0;
+    padding-right: 0;
+    overflow: hidden;
+    border-left: none;
+}
+
+#gemini-nav-bar.collapsed h3,
+#gemini-nav-bar.collapsed .nav-item,
+#gemini-nav-bar.collapsed::-webkit-scrollbar {
+    display: none; /* Hide content when collapsed */
+}
+
+/* Show expand button when navbar is collapsed */
+body.gemini-nav-collapsed #gemini-nav-expand-btn {
+    display: block;
+}
