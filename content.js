@@ -151,10 +151,19 @@ function addNavItem(summary, type, targetElement, elementId) {
 }
 
 /**
- * Finds and processes all user queries and model responses on the page.
+ * Finds and processes all user queries on the page.
  */
 function processChatElements() {
     console.log('Gemini Navigator: Processing chat elements...');
+
+    // Clear existing nav items before reprocessing
+    if (navBar) {
+        const existingNavItems = navBar.querySelectorAll('.nav-item');
+        existingNavItems.forEach(item => item.remove());
+    } else {
+        console.warn('Gemini Navigator: navBar not found during processChatElements. Cannot clear or add items.');
+        return; // Stop if navBar isn't initialized
+    }
 
     // --- Process User Queries ---
     // The selector for user queries based on the provided HTML structure
@@ -172,25 +181,6 @@ function processChatElements() {
             // The target for scrolling is the user-query-content element itself or its direct parent if more suitable
             const queryWrapper = queryContentDiv.closest('user-query-content');
             addNavItem(`Q: ${summary}`, 'query', queryWrapper || queryContentDiv, queryId);
-        }
-    });
-
-    // --- Process Model Responses ---
-    // The selector for responses based on the provided HTML structure
-    // <div ... class="response-content"> <message-content ... id="message-content-id-r_XXXXXXXXXXXXX"> <div class="markdown ..."> <p>...</p> </div> </message-content> </div>
-    const responseElements = document.querySelectorAll('div.response-content message-content[id^="message-content-id-"]');
-    responseElements.forEach((messageContentElement) => {
-        const responseId = messageContentElement.id; // e.g., "message-content-id-r_XXXXXXXX"
-        if (!responseId || document.getElementById(`nav-item-for-${responseId}`)) {
-            return; // Already processed or no ID
-        }
-
-        const markdownContent = messageContentElement.querySelector('div.markdown');
-        if (markdownContent) {
-            const summary = generateSummary(markdownContent.innerText);
-            // The target for scrolling is the response-content element or the message-content itself
-            const responseWrapper = messageContentElement.closest('div.response-content');
-            addNavItem(`A: ${summary}`, 'response', responseWrapper || messageContentElement, responseId);
         }
     });
 }
