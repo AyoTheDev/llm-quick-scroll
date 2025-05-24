@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Gemini Chat Navigator",
+  "name": "Gemini Chat Helper",
   "version": "1.0",
-  "description": "Adds a navigation bar to quickly scroll through Gemini chat queries and responses.",
+  "description": "Adds a navigation bar to quickly scroll through Gemini chat queries",
   "permissions": [
     "activeTab",
     "scripting",
@@ -20,7 +20,7 @@
   },
   "icons": {
     "16": "images/icon16.png",
-    "48": "images/icon48.png",
+    "48": "images/icon32.png",
     "128": "images/icon128.png"
   }
 }
