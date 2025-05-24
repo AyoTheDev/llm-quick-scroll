@@ -156,7 +156,6 @@ function addNavItem(summary, type, targetElement, elementId) {
 function processChatElements() {
     console.log('Gemini Navigator: Processing chat elements...');
 
-    // Clear existing nav items before reprocessing
     if (navBar) {
         const existingNavItems = navBar.querySelectorAll('.nav-item');
         existingNavItems.forEach(item => item.remove());
@@ -166,23 +165,29 @@ function processChatElements() {
     }
 
     // --- Process User Queries ---
-    // The selector for user queries based on the provided HTML structure
-    // <user-query-content ...> <div ... class="query-content" id="user-query-content-X"> <span ...> <div class="query-text"> <p>...</p> </div> </span> </div> </user-query-content>
-    const queryElements = document.querySelectorAll('user-query-content div.query-content[id^="user-query-content-"]');
-    queryElements.forEach((queryContentDiv) => {
-        const queryId = queryContentDiv.id; // e.g., "user-query-content-0"
-        if (!queryId || document.getElementById(`nav-item-for-${queryId}`)) {
-            return; // Already processed or no ID
-        }
+    // New selector for user query containers based on updated HTML structure:
+    // <span class="user-query-bubble-with-background ..."> ... <div class="query-text ..."> ... </div> ... </span>
+    const queryElements = document.querySelectorAll('span.user-query-bubble-with-background');
+    queryElements.forEach((queryElement, index) => { // queryElement is the span.user-query-bubble-with-background
+        // Generate a unique ID for the navigation link, as original element IDs might be gone or unreliable.
+        // This ID is for the nav item in the sidebar, not for the chat element itself.
+        const navItemSpecificId = `query-nav-item-${index}`;
 
-        const queryTextElement = queryContentDiv.querySelector('div.query-text');
-        if (queryTextElement) {
-            const summary = generateSummary(queryTextElement.innerText);
-            // The target for scrolling is the user-query-content element itself or its direct parent if more suitable
-            const queryWrapper = queryContentDiv.closest('user-query-content');
-            addNavItem(`Q: ${summary}`, 'query', queryWrapper || queryContentDiv, queryId);
+        // New selector for the text content within the query bubble.
+        // The text is within <div class="query-text ..."><p class="query-text-line ...">text</p></div>
+        const queryTextContainer = queryElement.querySelector('div.query-text');
+        if (queryTextContainer) {
+            const summary = generateSummary(queryTextContainer.innerText);
+
+            // The queryElement (span.user-query-bubble-with-background) is the new scroll target.
+            addNavItem(`Q: ${summary}`, 'query', queryElement, navItemSpecificId);
+        } else {
+            console.warn('Gemini Navigator: Could not find query text container for element:', queryElement);
         }
     });
+
+    // Note: If response elements also changed, their selectors would need a similar update.
+    // Currently, this function (based on previous view) only processes queries.
 }
 
 
