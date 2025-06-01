@@ -4,9 +4,6 @@
   "version": "1.0",
   "description": "Adds a navigation bar to quickly scroll through Gemini chat queries",
   "permissions": [
-    "activeTab",
-    "scripting",
-    "storage"
   ],
   "content_scripts": [
     {
