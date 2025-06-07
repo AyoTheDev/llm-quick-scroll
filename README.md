@@ -32,8 +32,6 @@ To install and use Gemini Quick Scroll locally, follow these steps:
 
 Once installed, the extension will automatically activate when you are on the Gemini website. Look for the new navigation elements or features provided by the extension to improve your scrolling experience.
 
-(Add more specific usage instructions if necessary)
-
 ## Contributing
 
 Contributions are welcome! If you'd like to contribute to Gemini Quick Scroll, please follow these steps:
