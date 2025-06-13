@@ -6,6 +6,9 @@ const OBSERVER_DEBOUNCE_TIME = 1000; // Milliseconds to wait after DOM changes b
 
 // --- State ---
 let navBar;
+let searchInput;
+let allNavItems = []; // Store all nav items for filtering
+let searchTimeout;
 let lastProcessedQueryId = -1;
 let lastProcessedResponseId = -1;
 let observerTimeout;
@@ -22,8 +25,35 @@ function createNavBar() {
 
     navBar = document.createElement('div');
     navBar.id = 'gemini-nav-bar';
-    navBar.innerHTML = '<h3>Chat Navigation <span id="gemini-nav-collapse-btn" title="Collapse Navigation">&raquo;</span></h3>';
+    
+    // Create header
+    const header = document.createElement('h3');
+    header.innerHTML = 'Chat Navigation <span id="gemini-nav-collapse-btn" title="Collapse Navigation">&raquo;</span>';
+    navBar.appendChild(header);
+    
+    // Create search container
+    const searchContainer = document.createElement('div');
+    searchContainer.className = 'search-container';
+    
+    searchInput = document.createElement('input');
+    searchInput.type = 'text';
+    searchInput.className = 'search-input';
+    searchInput.placeholder = 'Search questions...';
+    
+    const searchClear = document.createElement('div');
+    searchClear.className = 'search-clear';
+    searchClear.innerHTML = '&times;';
+    searchClear.style.display = 'none';
+    
+    searchContainer.appendChild(searchInput);
+    searchContainer.appendChild(searchClear);
+    navBar.appendChild(searchContainer);
+    
     document.body.appendChild(navBar);
+    
+    // Initialize search functionality
+    searchInput.addEventListener('input', handleSearch);
+    searchClear.addEventListener('click', clearSearch);
 
     const expandBtn = document.createElement('button');
     expandBtn.id = 'gemini-nav-expand-btn';
@@ -134,11 +164,16 @@ function addNavItem(summary, type, targetElement, elementId) {
         return;
     }
 
+    const fullText = targetElement.innerText || '';
     const navItem = document.createElement('div');
     navItem.classList.add('nav-item', type);
-    navItem.textContent = summary;
-    navItem.title = targetElement.innerText.substring(0, 200) + (targetElement.innerText.length > 200 ? '...' : ''); // Full text on hover
+    navItem.innerHTML = summary;
+    navItem.title = fullText.substring(0, 200) + (fullText.length > 200 ? '...' : ''); // Full text on hover
     navItem.id = navItemId;
+    
+    // Store full text for searching
+    navItem.dataset.fullText = fullText.toLowerCase();
+    navItem.dataset.summary = summary.toLowerCase();
 
     navItem.addEventListener('click', () => {
         targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -148,6 +183,7 @@ function addNavItem(summary, type, targetElement, elementId) {
     });
 
     navBar.appendChild(navItem);
+    allNavItems.push(navItem); // Store for filtering
 }
 
 /**
@@ -159,6 +195,7 @@ function processChatElements() {
     if (navBar) {
         const existingNavItems = navBar.querySelectorAll('.nav-item');
         existingNavItems.forEach(item => item.remove());
+        allNavItems = []; // Clear the stored items array
     } else {
         console.warn('Gemini Navigator: navBar not found during processChatElements. Cannot clear or add items.');
         return; // Stop if navBar isn't initialized
@@ -180,7 +217,7 @@ function processChatElements() {
             const summary = generateSummary(queryTextContainer.innerText);
 
             // The queryElement (span.user-query-bubble-with-background) is the new scroll target.
-            addNavItem(`Q: ${summary}`, 'query', queryElement, navItemSpecificId);
+            addNavItem(`<strong>${index + 1}.</strong> ${summary}`, 'query', queryElement, navItemSpecificId);
         } else {
             console.warn('Gemini Navigator: Could not find query text container for element:', queryElement);
         }
@@ -241,6 +278,60 @@ function observeChatContainer() {
 
     observer.observe(chatContainer, { childList: true, subtree: true });
     console.log('Gemini Navigator: MutationObserver started.');
+}
+
+// --- Search Functions ---
+
+/**
+ * Handles search input with debouncing for better UX
+ */
+function handleSearch() {
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    
+    // Show/hide clear button
+    const searchClear = navBar.querySelector('.search-clear');
+    if (searchClear) {
+        searchClear.style.display = searchTerm ? 'block' : 'none';
+    }
+    
+    // Debounce search for better performance
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        filterNavItems(searchTerm);
+    }, 200);
+}
+
+/**
+ * Filters navigation items based on search term
+ * @param {string} searchTerm - The search term to filter by
+ */
+function filterNavItems(searchTerm) {
+    allNavItems.forEach(item => {
+        if (!searchTerm) {
+            // Show all items when no search term
+            item.style.display = 'block';
+            return;
+        }
+        
+        // Search in both summary and full text
+        const matchesSearch = 
+            item.dataset.summary.includes(searchTerm) || 
+            item.dataset.fullText.includes(searchTerm);
+        
+        item.style.display = matchesSearch ? 'block' : 'none';
+    });
+}
+
+/**
+ * Clears the search input and shows all items
+ */
+function clearSearch() {
+    searchInput.value = '';
+    const searchClear = navBar.querySelector('.search-clear');
+    if (searchClear) {
+        searchClear.style.display = 'none';
+    }
+    filterNavItems(''); // Show all items
 }
 
 // --- Initialization ---

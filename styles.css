@@ -29,6 +29,57 @@
     padding-bottom: 5px;
 }
 
+/* Search Container */
+.search-container {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 8px 30px 8px 12px;
+    background-color: #3c4043;
+    border: 1px solid #5f6368;
+    border-radius: 20px;
+    color: #e8eaed;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s ease-in-out, background-color 0.2s ease-in-out;
+}
+
+.search-input:focus {
+    border-color: #8ab4f8;
+    background-color: #282a2d;
+}
+
+.search-input::placeholder {
+    color: #9aa0a6;
+}
+
+.search-clear {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    background-color: #5f6368;
+    color: #e8eaed;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 12px;
+    line-height: 1;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.search-clear:hover {
+    background-color: #9aa0a6;
+}
+
 .nav-item {
     padding: 8px 10px;
     margin-bottom: 6px;
@@ -137,6 +188,7 @@
 }
 
 #gemini-nav-bar.collapsed h3,
+#gemini-nav-bar.collapsed .search-container,
 #gemini-nav-bar.collapsed .nav-item,
 #gemini-nav-bar.collapsed::-webkit-scrollbar {
     display: none; /* Hide content when collapsed */
@@ -145,4 +197,19 @@
 /* Show expand button when navbar is collapsed */
 body.gemini-nav-collapsed #gemini-nav-expand-btn {
     display: block;
+}
+/* === tweak the clear-button size & centering === */
+.search-input {
+    /* increase right-side padding so text doesn’t overlap the larger “x” */
+    padding: 8px 36px 8px 12px;          /* was 30px */
+}
+
+.search-clear {
+    /* bigger, perfectly centred circle */
+    width: 24px;                         /* was 18px */
+    height: 24px;                        /* was 18px */
+    font-size: 18px;                     /* was 12px – ensures the “×” fills the circle */
+    line-height: 24px;                   /* match height for perfect vertical centering */
+    font-weight: bold;                   /* make × more prominent */
+    text-align: center;                  /* ensure horizontal centering */
 }
