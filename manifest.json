@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "AI Chat Navigator",
-  "version": "3.0",
+  "version": "4.0",
   "description": "Adds a navigation bar to quickly scroll through chat messages on AI services (Gemini, ChatGPT, Claude, AI Studio)",
   "permissions": [
   ],
