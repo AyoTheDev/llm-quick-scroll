@@ -1,5 +1,5 @@
 /* styles.css */
-#gemini-nav-bar {
+#ai-nav-bar {
     position: fixed;
     top: 60px;       /* Assuming Gemini header is 60px */
     right: 0px;      /* Flush to the right edge */
@@ -17,7 +17,7 @@
     transition: width 0.3s ease-in-out, padding 0.3s ease-in-out; /* For smooth collapse */
 }
 
-#gemini-nav-bar h3 {
+#ai-nav-bar h3 {
     display: flex; /* To align title and button */
     justify-content: space-between; /* Pushes button to the right */
     align-items: center;
@@ -119,26 +119,26 @@
 }
 
 /* Scrollbar styling for webkit browsers */
-#gemini-nav-bar::-webkit-scrollbar {
+#ai-nav-bar::-webkit-scrollbar {
     width: 8px;
 }
 
-#gemini-nav-bar::-webkit-scrollbar-track {
+#ai-nav-bar::-webkit-scrollbar-track {
     background: #202124;
     border-radius: 8px;
 }
 
-#gemini-nav-bar::-webkit-scrollbar-thumb {
+#ai-nav-bar::-webkit-scrollbar-thumb {
     background: #5f6368;
     border-radius: 8px;
 }
 
-#gemini-nav-bar::-webkit-scrollbar-thumb:hover {
+#ai-nav-bar::-webkit-scrollbar-thumb:hover {
     background: #9aa0a6;
 }
 
 /* Collapse Button (within Navbar) */
-#gemini-nav-collapse-btn {
+#ai-nav-collapse-btn {
     cursor: pointer;
     font-size: 20px;
     padding: 0 5px;
@@ -148,12 +148,12 @@
     transition: color 0.2s ease-in-out;
 }
 
-#gemini-nav-collapse-btn:hover {
+#ai-nav-collapse-btn:hover {
     color: #e8eaed; /* Brighter on hover */
 }
 
 /* Expand Button (Fixed to edge) */
-#gemini-nav-expand-btn {
+#ai-nav-expand-btn {
     position: fixed;
     top: 70px; /* Align with where navbar top would be */
     right: 10px;
@@ -174,12 +174,12 @@
     transition: background-color 0.2s ease-in-out;
 }
 
-#gemini-nav-expand-btn:hover {
+#ai-nav-expand-btn:hover {
     background-color: #3c4043;
 }
 
 /* Styles for when the navbar is collapsed */
-#gemini-nav-bar.collapsed {
+#ai-nav-bar.collapsed {
     width: 0;
     padding-left: 0;
     padding-right: 0;
@@ -187,15 +187,15 @@
     border-left: none;
 }
 
-#gemini-nav-bar.collapsed h3,
-#gemini-nav-bar.collapsed .search-container,
-#gemini-nav-bar.collapsed .nav-item,
-#gemini-nav-bar.collapsed::-webkit-scrollbar {
+#ai-nav-bar.collapsed h3,
+#ai-nav-bar.collapsed .search-container,
+#ai-nav-bar.collapsed .nav-item,
+#ai-nav-bar.collapsed::-webkit-scrollbar {
     display: none; /* Hide content when collapsed */
 }
 
 /* Show expand button when navbar is collapsed */
-body.gemini-nav-collapsed #gemini-nav-expand-btn {
+body.ai-nav-collapsed #ai-nav-expand-btn {
     display: block;
 }
 /* === tweak the clear-button size & centering === */

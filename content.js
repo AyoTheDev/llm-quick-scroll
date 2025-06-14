@@ -12,6 +12,7 @@ let searchTimeout;
 let lastProcessedQueryId = -1;
 let lastProcessedResponseId = -1;
 let observerTimeout;
+let currentProvider; // Current AI provider instance
 
 // --- Core Functions ---
 
@@ -19,16 +20,24 @@ let observerTimeout;
  * Creates and injects the navigation bar into the page.
  */
 function createNavBar() {
-    if (document.getElementById('gemini-nav-bar')) {
+    if (document.getElementById('ai-nav-bar')) {
         return; // Nav bar already exists
     }
 
+    if (!currentProvider) {
+        console.error('AI Navigator: No provider found for current page');
+        return;
+    }
+
+    const layoutConfig = currentProvider.getLayoutConfig();
     navBar = document.createElement('div');
-    navBar.id = 'gemini-nav-bar';
+    navBar.id = 'ai-nav-bar';
+    navBar.style.top = `${layoutConfig.topOffset}px`;
+    navBar.style.height = `calc(100vh - ${layoutConfig.topOffset}px)`;
     
-    // Create header
+    // Create header with provider-specific title
     const header = document.createElement('h3');
-    header.innerHTML = 'Chat Navigation <span id="gemini-nav-collapse-btn" title="Collapse Navigation">&raquo;</span>';
+    header.innerHTML = `${currentProvider.getNavTitle()} <span id="ai-nav-collapse-btn" title="Collapse Navigation">&raquo;</span>`;
     navBar.appendChild(header);
     
     // Create search container
@@ -56,18 +65,18 @@ function createNavBar() {
     searchClear.addEventListener('click', clearSearch);
 
     const expandBtn = document.createElement('button');
-    expandBtn.id = 'gemini-nav-expand-btn';
+    expandBtn.id = 'ai-nav-expand-btn';
     expandBtn.title = 'Expand Navigation';
     expandBtn.innerHTML = '&laquo;';
     document.body.appendChild(expandBtn);
 
-    const collapseBtn = document.getElementById('gemini-nav-collapse-btn');
+    const collapseBtn = document.getElementById('ai-nav-collapse-btn');
 
     if (navBar && collapseBtn && expandBtn) {
         collapseBtn.addEventListener('click', toggleNav);
         expandBtn.addEventListener('click', toggleNav);
     } else {
-        console.error('Gemini Quick Scroll: Could not find all necessary elements for collapse/expand functionality.');
+        console.error('AI Navigator: Could not find all necessary elements for collapse/expand functionality.');
     }
     adjustMainContentLayout(); // Adjust layout after adding nav bar
 }
@@ -86,7 +95,7 @@ function createNavBar() {
 function toggleNav() {
     if (!navBar) return;
     navBar.classList.toggle('collapsed');
-    document.body.classList.toggle('gemini-nav-collapsed');
+    document.body.classList.toggle('ai-nav-collapsed');
     adjustMainContentLayout(); // Re-adjust margin after toggling
 }
 
@@ -94,18 +103,13 @@ function toggleNav() {
  * Adjusts the main content area to make space for the sidebar.
  */
 function adjustMainContentLayout() {
-    const navBarWidth = 250; // Must match CSS width
-    const gap = 10; // Space between content and nav bar
-    const mainContentMargin = navBarWidth + gap + 'px';
+    if (!currentProvider) return;
+    
+    const layoutConfig = currentProvider.getLayoutConfig();
+    const mainContentMargin = layoutConfig.navBarWidth + layoutConfig.gap + 'px';
 
-    // Try to find Gemini's main content area
-    // This selector might need adjustment based on Gemini's actual DOM structure
-    const mainContentSelectors = [
-        'main',
-        '[role="main"]',
-        '.main-content', // A common class name
-        'body > div:first-child > div:nth-child(2)' // A more speculative selector based on common layouts
-    ];
+    // Use provider-specific main content selectors
+    const mainContentSelectors = currentProvider.getSelectors().mainContent;
 
     let mainContentArea = null;
     for (const selector of mainContentSelectors) {
@@ -116,16 +120,16 @@ function adjustMainContentLayout() {
     if (mainContentArea) {
         if (navBar && navBar.classList.contains('collapsed')) {
             mainContentArea.style.marginRight = '0px';
-            console.log('Gemini Quick Scroll: Navbar collapsed, removed margin-right from main content area.');
+            console.log('AI Navigator: Navbar collapsed, removed margin-right from main content area.');
         } else {
             mainContentArea.style.marginRight = mainContentMargin;
-            console.log('Gemini Quick Scroll: Applied margin-right to main content area:', mainContentArea);
+            console.log('AI Navigator: Applied margin-right to main content area:', mainContentArea);
         }
     } else {
         // As a fallback, if a specific main content area isn't found,
         // we might need to adjust the body or a primary wrapper.
         // For now, let's log that it wasn't found.
-        console.warn('Gemini Quick Scroll: Could not identify Gemini main content area to adjust layout.');
+        console.warn(`AI Navigator: Could not identify ${currentProvider.name} main content area to adjust layout.`);
     }
 }
 
@@ -155,7 +159,7 @@ function addNavItem(summary, type, targetElement, elementId) {
 
     // Ensure target element has an ID for scrolling, or assign one
     if (!targetElement.id) {
-        targetElement.id = `gemini-nav-target-${type}-${elementId.replace(/[^a-zA-Z0-9-_]/g, '')}`;
+        targetElement.id = `ai-nav-target-${type}-${elementId.replace(/[^a-zA-Z0-9-_]/g, '')}`;
     }
     const navItemId = `nav-item-for-${targetElement.id}`;
 
@@ -178,7 +182,7 @@ function addNavItem(summary, type, targetElement, elementId) {
     navItem.addEventListener('click', () => {
         targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
         // Optional: Highlight active item (implement with an 'active' class)
-        document.querySelectorAll('#gemini-nav-bar .nav-item').forEach(item => item.classList.remove('active'));
+        document.querySelectorAll('#ai-nav-bar .nav-item').forEach(item => item.classList.remove('active'));
         navItem.classList.add('active');
     });
 
@@ -187,44 +191,62 @@ function addNavItem(summary, type, targetElement, elementId) {
 }
 
 /**
- * Finds and processes all user queries on the page.
+ * Finds and processes all user queries on the page using the current provider.
  */
 function processChatElements() {
-    console.log('Gemini Navigator: Processing chat elements...');
+    console.log(`AI Navigator: Processing chat elements for ${currentProvider?.name || 'unknown provider'}...`);
+
+    if (!currentProvider) {
+        console.error('AI Navigator: No provider available for processing chat elements');
+        return;
+    }
 
     if (navBar) {
         const existingNavItems = navBar.querySelectorAll('.nav-item');
         existingNavItems.forEach(item => item.remove());
         allNavItems = []; // Clear the stored items array
     } else {
-        console.warn('Gemini Navigator: navBar not found during processChatElements. Cannot clear or add items.');
+        console.warn('AI Navigator: navBar not found during processChatElements. Cannot clear or add items.');
         return; // Stop if navBar isn't initialized
     }
 
+    const selectors = currentProvider.getSelectors();
+
     // --- Process User Queries ---
-    // New selector for user query containers based on updated HTML structure:
-    // <span class="user-query-bubble-with-background ..."> ... <div class="query-text ..."> ... </div> ... </span>
-    const queryElements = document.querySelectorAll('span.user-query-bubble-with-background');
-    queryElements.forEach((queryElement, index) => { // queryElement is the span.user-query-bubble-with-background
-        // Generate a unique ID for the navigation link, as original element IDs might be gone or unreliable.
-        // This ID is for the nav item in the sidebar, not for the chat element itself.
+    const queryElements = document.querySelectorAll(selectors.queries);
+    queryElements.forEach((queryElement, index) => {
         const navItemSpecificId = `query-nav-item-${index}`;
-
-        // New selector for the text content within the query bubble.
-        // The text is within <div class="query-text ..."><p class="query-text-line ...">text</p></div>
-        const queryTextContainer = queryElement.querySelector('div.query-text');
-        if (queryTextContainer) {
-            const summary = generateSummary(queryTextContainer.innerText);
-
-            // The queryElement (span.user-query-bubble-with-background) is the new scroll target.
-            addNavItem(`<strong>${index + 1}.</strong> ${summary}`, 'query', queryElement, navItemSpecificId);
-        } else {
-            console.warn('Gemini Navigator: Could not find query text container for element:', queryElement);
+        
+        try {
+            const textContent = currentProvider.extractTextContent(queryElement);
+            if (textContent) {
+                const summary = generateSummary(textContent);
+                addNavItem(`<strong>${index + 1}.</strong> ${summary}`, 'query', queryElement, navItemSpecificId);
+            } else {
+                console.warn(`AI Navigator: Could not extract text content for query element:`, queryElement);
+            }
+        } catch (error) {
+            console.warn(`AI Navigator: Error processing query element:`, error, queryElement);
         }
     });
 
-    // Note: If response elements also changed, their selectors would need a similar update.
-    // Currently, this function (based on previous view) only processes queries.
+    // --- Process Assistant Responses (if selector is provided) ---
+    if (selectors.responses) {
+        const responseElements = document.querySelectorAll(selectors.responses);
+        responseElements.forEach((responseElement, index) => {
+            const navItemSpecificId = `response-nav-item-${index}`;
+            
+            try {
+                const textContent = currentProvider.extractTextContent(responseElement);
+                if (textContent) {
+                    const summary = generateSummary(textContent);
+                    addNavItem(`<em>Response ${index + 1}:</em> ${summary}`, 'response', responseElement, navItemSpecificId);
+                }
+            } catch (error) {
+                console.warn(`AI Navigator: Error processing response element:`, error, responseElement);
+            }
+        });
+    }
 }
 
 
@@ -232,52 +254,58 @@ function processChatElements() {
  * Sets up a MutationObserver to watch for new chat messages.
  */
 function observeChatContainer() {
-    // Try to find a specific container for chat messages.
-    // This might need adjustment based on Gemini's exact DOM structure.
-    // Common parent elements for chat messages could be <conversation-turn>, <chat-history>, etc.
-    // For now, let's try to find a common ancestor of query and response elements.
-    // A more robust selector would be ideal if a stable chat container ID or class exists.
-    // Let's assume the messages are added to a child of 'body' or a main content area.
-    // A common parent for `user-query-content` and `response-content` might be a `div` in `body > main > div ...`
-    // For Gemini, a `div.chat-container` or similar is often used.
-    // Let's try a more generic approach if a specific one isn't obvious or stable.
-    // The elements `user-query-content` and `div.response-content` are usually siblings or near siblings
-    // within a scrollable chat area.
+    if (!currentProvider) {
+        console.error('AI Navigator: No provider available for setting up observer');
+        return;
+    }
+
     let chatContainer = document.body; // Fallback to body
-    const firstQuery = document.querySelector('user-query-content');
-    if (firstQuery && firstQuery.parentElement) {
-        // Attempt to find a more specific scrollable container
-        let potentialContainer = firstQuery.parentElement;
-        while(potentialContainer && potentialContainer !== document.body) {
-            if (potentialContainer.scrollHeight > potentialContainer.clientHeight) { // Check if it's scrollable
-                const styles = window.getComputedStyle(potentialContainer);
-                if (styles.overflowY === 'auto' || styles.overflowY === 'scroll') {
-                    chatContainer = potentialContainer;
-                    break;
-                }
-            }
-            potentialContainer = potentialContainer.parentElement;
-        }
-        if (chatContainer === document.body && firstQuery.parentElement.parentElement) {
-            // If no scrollable parent, observe the direct parent of the first query/response block
-            chatContainer = firstQuery.parentElement.parentElement || document.body;
+    const chatContainerSelector = currentProvider.getChatContainerSelector();
+    
+    if (chatContainerSelector !== 'body') {
+        const specificContainer = document.querySelector(chatContainerSelector);
+        if (specificContainer) {
+            chatContainer = specificContainer;
         }
     }
 
+    // If no specific container found, try to find a scrollable container containing the first query
+    if (chatContainer === document.body) {
+        const selectors = currentProvider.getSelectors();
+        const firstQuery = document.querySelector(selectors.queries);
+        if (firstQuery && firstQuery.parentElement) {
+            // Attempt to find a more specific scrollable container
+            let potentialContainer = firstQuery.parentElement;
+            while(potentialContainer && potentialContainer !== document.body) {
+                if (potentialContainer.scrollHeight > potentialContainer.clientHeight) { // Check if it's scrollable
+                    const styles = window.getComputedStyle(potentialContainer);
+                    if (styles.overflowY === 'auto' || styles.overflowY === 'scroll') {
+                        chatContainer = potentialContainer;
+                        break;
+                    }
+                }
+                potentialContainer = potentialContainer.parentElement;
+            }
+            if (chatContainer === document.body && firstQuery.parentElement.parentElement) {
+                // If no scrollable parent, observe the direct parent of the first query/response block
+                chatContainer = firstQuery.parentElement.parentElement || document.body;
+            }
+        }
+    }
 
-    console.log("Gemini Navigator: Observing container:", chatContainer);
+    console.log(`AI Navigator: Observing container for ${currentProvider.name}:`, chatContainer);
 
     const observer = new MutationObserver((mutationsList, observer) => {
         // Debounce the processing to avoid multiple rapid updates
         clearTimeout(observerTimeout);
         observerTimeout = setTimeout(() => {
-            console.log("Gemini Navigator: DOM changes detected, reprocessing chat elements.");
+            console.log(`AI Navigator: DOM changes detected for ${currentProvider.name}, reprocessing chat elements.`);
             processChatElements();
         }, OBSERVER_DEBOUNCE_TIME);
     });
 
     observer.observe(chatContainer, { childList: true, subtree: true });
-    console.log('Gemini Navigator: MutationObserver started.');
+    console.log(`AI Navigator: MutationObserver started for ${currentProvider.name}.`);
 }
 
 // --- Search Functions ---
@@ -344,10 +372,22 @@ if (document.readyState === 'loading') {
 }
 
 function init() {
-    console.log('Gemini Navigator: Initializing...');
+    console.log('AI Navigator: Initializing...');
+    
+    // Initialize provider system
+    const providerFactory = new ProviderFactory();
+    currentProvider = providerFactory.getCurrentProvider();
+    
+    if (!currentProvider) {
+        console.warn('AI Navigator: No matching provider found for current page:', window.location.href);
+        return;
+    }
+    
+    console.log(`AI Navigator: Using provider: ${currentProvider.name}`);
+    
     createNavBar();
     // Initial processing of any existing elements
-    // It might take a moment for Gemini's UI to fully render, so a small delay or retry mechanism can be helpful
+    // It might take a moment for the UI to fully render, so a small delay or retry mechanism can be helpful
     setTimeout(() => {
         processChatElements();
         observeChatContainer(); // Start observing for new messages

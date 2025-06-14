@@ -1,19 +1,29 @@
 {
   "manifest_version": 3,
-  "name": "Gemini Chat Helper",
-  "version": "2.0",
-  "description": "Adds a navigation bar to quickly scroll through Gemini chat queries",
+  "name": "AI Chat Navigator",
+  "version": "3.0",
+  "description": "Adds a navigation bar to quickly scroll through chat messages on AI services (Gemini, ChatGPT, Claude, AI Studio)",
   "permissions": [
   ],
   "content_scripts": [
     {
-      "matches": ["https://gemini.google.com/app/*", "https://gemini.google.com/chat/*"],
-      "js": ["content.js"],
+      "matches": [
+        "https://gemini.google.com/app/*", 
+        "https://gemini.google.com/chat/*",
+        "https://chatgpt.com/c/*",
+        "https://chatgpt.com/*",
+        "https://claude.ai/chat/*",
+        "https://claude.ai/*",
+        "https://aistudio.google.com/prompts/*",
+        "https://aistudio.google.com/live/*",
+        "https://aistudio.google.com/*"
+      ],
+      "js": ["providers.js", "content.js"],
       "css": ["styles.css"]
     }
   ],
   "action": {
-    "default_title": "Gemini Chat Navigator"
+    "default_title": "AI Chat Navigator"
   },
   "icons": {
     "16": "images/icon16.png",
