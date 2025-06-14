@@ -14,44 +14,153 @@ let lastProcessedResponseId = -1;
 let observerTimeout;
 let currentProvider; // Current AI provider instance
 let sessionQueries = []; // Persistent storage for queries in current session
+let isLoading = false; // Loading state for data refresh
+let currentUrl = window.location.href; // Track current URL for change detection
+
+// --- Loading State Management ---
+
+/**
+ * Shows loading indicator in the navigation bar
+ */
+function showLoadingState() {
+    if (!navBar || isLoading) return;
+    
+    isLoading = true;
+    
+    // Clear existing nav items
+    const existingNavItems = navBar.querySelectorAll('.nav-item');
+    existingNavItems.forEach(item => item.remove());
+    allNavItems = [];
+    
+    // Create loading indicator
+    const loadingContainer = document.createElement('div');
+    loadingContainer.className = 'nav-loading-container';
+    loadingContainer.innerHTML = `
+        <div class="nav-loading-spinner"></div>
+        <div class="nav-loading-text">Loading questions...</div>
+    `;
+    
+    navBar.appendChild(loadingContainer);
+}
+
+/**
+ * Hides loading indicator and restores normal navigation
+ */
+function hideLoadingState() {
+    if (!navBar || !isLoading) return;
+    
+    const loadingContainer = navBar.querySelector('.nav-loading-container');
+    if (loadingContainer) {
+        loadingContainer.remove();
+    }
+    
+    isLoading = false;
+}
+
+/**
+ * Refreshes all data - clears session and reprocesses page
+ */
+function refreshData() {
+    console.log('AI Navigator: Refreshing data...');
+    
+    showLoadingState();
+    
+    // Clear session data
+    sessionQueries = [];
+    
+    // Process with a small delay to show loading state
+    setTimeout(() => {
+        processChatElements();
+        hideLoadingState();
+        console.log('AI Navigator: Data refresh completed');
+    }, 500);
+}
+
+// --- Page Change Detection ---
+
+/**
+ * Detects URL changes and refreshes data accordingly
+ */
+function handleUrlChange() {
+    const newUrl = window.location.href;
+    if (newUrl !== currentUrl) {
+        console.log(`AI Navigator: URL changed from ${currentUrl} to ${newUrl}`);
+        currentUrl = newUrl;
+        
+        // Check if we're still on a supported provider page
+        const providerFactory = new ProviderFactory();
+        const newProvider = providerFactory.getCurrentProvider();
+        
+        if (newProvider && newProvider.name === currentProvider?.name) {
+            // Same provider, different page - refresh data
+            refreshData();
+        } else if (newProvider) {
+            // Different provider - reinitialize
+            console.log(`AI Navigator: Provider changed to ${newProvider.name}, reinitializing...`);
+            currentProvider = newProvider;
+            refreshData();
+        } else {
+            // No longer on supported page - could hide navbar
+            console.log('AI Navigator: No longer on supported page');
+        }
+    }
+}
+
+/**
+ * Sets up page change detection
+ */
+function setupPageChangeDetection() {
+    // Listen for popstate events (back/forward navigation)
+    window.addEventListener('popstate', handleUrlChange);
+    
+    // Listen for pushstate/replacestate (programmatic navigation)
+    const originalPushState = history.pushState;
+    const originalReplaceState = history.replaceState;
+    
+    history.pushState = function() {
+        originalPushState.apply(history, arguments);
+        setTimeout(handleUrlChange, 100); // Small delay to let page update
+    };
+    
+    history.replaceState = function() {
+        originalReplaceState.apply(history, arguments);
+        setTimeout(handleUrlChange, 100);
+    };
+    
+    // Listen for visibility change (tab switching)
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            // Tab became visible - check for URL changes and refresh
+            setTimeout(() => {
+                handleUrlChange();
+                // Also refresh data in case content changed while tab was hidden
+                if (currentProvider) {
+                    refreshData();
+                }
+            }, 500);
+        }
+    });
+    
+    console.log('AI Navigator: Page change detection setup complete');
+}
 
 // --- Session Management ---
 
 /**
- * Gets a unique session key based on the current page URL and provider
- * @returns {string} Session storage key
- */
-function getSessionKey() {
-    const url = window.location.href;
-    const providerName = currentProvider ? currentProvider.name : 'unknown';
-    return `ai-navigator-session-${providerName}-${btoa(url).slice(0, 20)}`;
-}
-
-/**
- * Loads persisted queries from session storage
+ * Loads persisted queries (in-memory only, resets on page reload)
  * @returns {Array} Array of stored query objects
  */
 function loadSessionQueries() {
-    try {
-        const sessionKey = getSessionKey();
-        const stored = sessionStorage.getItem(sessionKey);
-        return stored ? JSON.parse(stored) : [];
-    } catch (error) {
-        console.warn('AI Navigator: Error loading session queries:', error);
-        return [];
-    }
+    // Return empty array - fresh start on each page load
+    return [];
 }
 
 /**
- * Saves current queries to session storage
+ * Saves current queries (in-memory only, no persistence)
  */
 function saveSessionQueries() {
-    try {
-        const sessionKey = getSessionKey();
-        sessionStorage.setItem(sessionKey, JSON.stringify(sessionQueries));
-    } catch (error) {
-        console.warn('AI Navigator: Error saving session queries:', error);
-    }
+    // No-op - we don't persist to storage to avoid stale data
+    // Data is kept in memory only during the current page session
 }
 
 /**
@@ -517,16 +626,17 @@ function init() {
     
     console.log(`AI Navigator: Using provider: ${currentProvider.name}`);
     
-    // Load existing session data
+    // Initialize fresh session data (resets on each page load)
     sessionQueries = loadSessionQueries();
-    console.log(`AI Navigator: Loaded ${sessionQueries.length} queries from session storage`);
+    console.log(`AI Navigator: Starting fresh session for ${currentProvider.name}`);
     
     createNavBar();
+    setupPageChangeDetection(); // Set up listeners for page/tab changes
     
     // Initial processing of any existing elements
     // It might take a moment for the UI to fully render, so a small delay or retry mechanism can be helpful
     setTimeout(() => {
-        processChatElements();
+        refreshData(); // Use refreshData instead of processChatElements to show loading state
         observeChatContainer(); // Start observing for new messages
     }, 2000); // Wait a bit for initial content to load
 }
