@@ -182,6 +182,84 @@ function addQueryToSession(queryData) {
 }
 
 /**
+ * Validates session queries against current DOM and removes inactive ones
+ * @returns {Array} Array of validated and active query objects
+ */
+function validateSessionQueries() {
+    if (!currentProvider) return sessionQueries;
+
+    const selectors = currentProvider.getSelectors();
+    const currentDOMQueries = document.querySelectorAll(selectors.queries);
+    const validQueries = [];
+    let removedCount = 0;
+
+    console.log(`AI Navigator: Validating ${sessionQueries.length} stored queries against ${currentDOMQueries.length} DOM queries`);
+
+    sessionQueries.forEach((queryData, index) => {
+        let isValid = false;
+        let targetElement = null;
+
+        // First try to find by stored element ID
+        if (queryData.elementId) {
+            targetElement = document.getElementById(queryData.elementId);
+            if (targetElement) {
+                // Verify the element still contains the expected text
+                try {
+                    const currentText = currentProvider.extractTextContent(targetElement);
+                    if (currentText && currentText.trim() === queryData.text.trim()) {
+                        isValid = true;
+                    }
+                } catch (error) {
+                    // Element exists but can't extract text - might be broken
+                    console.warn(`AI Navigator: Could not extract text from stored element ${queryData.elementId}`);
+                }
+            }
+        }
+
+        // If not found by ID, try to find by content matching
+        if (!isValid) {
+            for (const element of currentDOMQueries) {
+                try {
+                    const elementText = currentProvider.extractTextContent(element);
+                    if (elementText && elementText.trim() === queryData.text.trim()) {
+                        targetElement = element;
+                        // Update the element ID reference if it changed
+                        if (element.id && element.id !== queryData.elementId) {
+                            queryData.elementId = element.id;
+                        }
+                        isValid = true;
+                        break;
+                    }
+                } catch (error) {
+                    // Continue searching
+                }
+            }
+        }
+
+        if (isValid) {
+            validQueries.push(queryData);
+        } else {
+            removedCount++;
+            console.log(`AI Navigator: Removed inactive query: ${queryData.text.substring(0, 50)}...`);
+        }
+    });
+
+    if (removedCount > 0) {
+        console.log(`AI Navigator: Validation complete - removed ${removedCount} inactive queries, ${validQueries.length} remain active`);
+        // Update session queries with only valid ones
+        sessionQueries = validQueries;
+        // Re-index the valid queries
+        sessionQueries.forEach((query, index) => {
+            query.index = index;
+        });
+    } else {
+        console.log(`AI Navigator: Validation complete - all ${validQueries.length} queries are still active`);
+    }
+
+    return validQueries;
+}
+
+/**
  * Rebuilds navigation from session data and current DOM elements
  */
 function rebuildNavigationFromSession() {
@@ -192,8 +270,11 @@ function rebuildNavigationFromSession() {
     existingNavItems.forEach(item => item.remove());
     allNavItems = [];
 
-    // Rebuild from session data
-    sessionQueries.forEach((queryData, index) => {
+    // Validate queries first to remove any broken/inactive ones
+    const validQueries = validateSessionQueries();
+
+    // Rebuild from validated session data
+    validQueries.forEach((queryData, index) => {
         // Try to find the element in the current DOM
         let targetElement = null;
         
@@ -212,6 +293,10 @@ function rebuildNavigationFromSession() {
                     const elementText = currentProvider.extractTextContent(element);
                     if (elementText && elementText.trim() === queryData.text.trim()) {
                         targetElement = element;
+                        // Update element ID if it changed
+                        if (element.id && element.id !== queryData.elementId) {
+                            queryData.elementId = element.id;
+                        }
                         break;
                     }
                 } catch (error) {
@@ -247,6 +332,7 @@ function createPlaceholderElement(queryData) {
     placeholder.addEventListener('click', () => {
         // For AI Studio, we might need to trigger scrolling to make the element visible
         console.log(`AI Navigator: Attempting to navigate to: ${queryData.text.substring(0, 50)}...`);
+        console.warn('AI Navigator: This question may not be currently visible due to virtual scrolling');
         // This could be enhanced with provider-specific navigation logic
     });
     
@@ -479,7 +565,7 @@ function processChatElements() {
         }
     });
 
-    // Rebuild navigation from complete session data
+    // Rebuild navigation from complete session data (includes validation)
     rebuildNavigationFromSession();
 
     if (newQueriesFound) {

@@ -233,6 +233,20 @@ body.ai-nav-collapsed #ai-nav-expand-btn {
         transform: rotate(360deg);
     }
 }
+
+/* Placeholder item styles (for virtual scrolling) */
+.nav-item.placeholder {
+    opacity: 0.6;
+    font-style: italic;
+    border-left-color: #5f6368 !important; /* Dimmed border */
+}
+
+.nav-item.placeholder::after {
+    content: " (scroll to view)";
+    font-size: 11px;
+    color: #5f6368;
+    font-style: normal;
+}
 /* === tweak the clear-button size & centering === */
 .search-input {
     /* increase right-side padding so text doesn’t overlap the larger “x” */
