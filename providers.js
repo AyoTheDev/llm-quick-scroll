@@ -120,12 +120,12 @@ class ChatGPTProvider extends AIProvider {
             queries: '[data-message-author-role="user"]',
             queryText: '.whitespace-pre-wrap',
             responses: '[data-message-author-role="assistant"]',
-            responseText: '.whitespace-pre-wrap',
+            responseText: '.markdown.prose',
             chatContainer: 'main',
             mainContent: [
                 'main',
                 '[role="main"]',
-                '.conversation-container'
+                '.flex-1'
             ]
         };
     }
@@ -139,8 +139,20 @@ class ChatGPTProvider extends AIProvider {
     }
 
     extractTextContent(element) {
-        const textContainer = element.querySelector(this.getSelectors().queryText);
-        return textContainer ? textContainer.innerText : element.innerText;
+        // For user messages, text is in .whitespace-pre-wrap
+        const userTextContainer = element.querySelector('.whitespace-pre-wrap');
+        if (userTextContainer) {
+            return userTextContainer.innerText;
+        }
+        
+        // For assistant messages, text is in .markdown.prose
+        const assistantTextContainer = element.querySelector('.markdown.prose');
+        if (assistantTextContainer) {
+            return assistantTextContainer.innerText;
+        }
+        
+        // Fallback to element text
+        return element.innerText;
     }
 }
 
