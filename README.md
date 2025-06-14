@@ -1,16 +1,16 @@
-# Gemini Quick Scroll
+# AI Quick Scroll
 
-Gemini Quick Scroll is a Google Chrome extension designed to enhance your navigation experience when interacting with the Gemini web interface. It provides features to quickly scroll and navigate through lengthy conversations.
+AI Quick Scroll is a Google Chrome extension designed to enhance your navigation experience when interacting with the main AI web interfaces. It provides features to quickly scroll and navigate through lengthy conversations.
 
 ## Features
 
-- **Dynamic Navigation Bar:** Injects a dedicated navigation sidebar into the Gemini chat interface.
+- **Dynamic Navigation Bar:** Injects a dedicated navigation sidebar into the AI chat interface.
 - **Chat Item Navigation:** Automatically populates this sidebar with links to each user query and AI response in the current chat.
 - **Concise Summaries:** Generates a short summary (e.g., the first 10 words) for each query and response in the navigation links for easy identification.
 - **Click-to-Scroll:** Instantly jump to a specific query or response by clicking its summary in the navigation bar.
 - **Real-time Updates:** The navigation bar dynamically updates as new messages appear, adding new queries and responses automatically.
 - **Collapsible Sidebar:** The navigation bar can be collapsed to save screen space and expanded when needed.
-- **Automatic Layout Adjustment:** The extension adjusts the main Gemini content area to prevent overlap with the navigation bar.
+- **Automatic Layout Adjustment:** The extension adjusts the main AI content area to prevent overlap with the navigation bar.
 
 ## Installation
 
@@ -34,8 +34,8 @@ If you want to modify the code or contribute:
 
 1. **Clone the Repository:**
    ```bash
-   git clone https://github.com/AyoTheDev/gemini-quick-scroll.git
-   cd gemini-quick-scroll
+   git clone https://github.com/AyoTheDev/llm-quick-scroll.git
+   cd llm-quick-scroll
    ```
 
 2. **Load the Extension in Chrome:**
@@ -48,14 +48,14 @@ If you want to modify the code or contribute:
 
 ## How to Use
 
-Once installed, the extension will automatically activate when you are on the Gemini website. Look for the new navigation elements or features provided by the extension to improve your scrolling experience.
+Once installed, the extension will automatically activate when you are on the AI websites. Look for the new navigation elements or features provided by the extension to improve your scrolling experience.
 
 ## Contributing
 
-Contributions are welcome! If you'd like to contribute to Gemini Quick Scroll, please follow these steps:
+Contributions are welcome! If you'd like to contribute to AI Quick Scroll, please follow these steps:
 
 1.  **Fork the Repository:** Click the 'Fork' button at the top right of the repository page.
-2.  **Clone Your Fork:** `git clone https://github.com/YOUR_USERNAME/gemini-quick-scroll.git` (Replace `YOUR_USERNAME` with the contributor's GitHub username)
+2.  **Clone Your Fork:** `git clone https://github.com/YOUR_USERNAME/llm-quick-scroll.git` (Replace `YOUR_USERNAME` with the contributor's GitHub username)
 3.  **Create a New Branch:** `git checkout -b feature/your-feature-name` or `bugfix/your-bug-fix-name`
 4.  **Make Your Changes:** Implement your feature or bug fix.
 5.  **Commit Your Changes:** `git commit -m "Add some feature"`
@@ -83,5 +83,3 @@ I have put MINIMAL effort into this project beyond 2- 5 prompt 'vibe coding' ses
 This is an open-source project and is not affiliated with or endorsed by Google or Gemini.
 
 ---
-
-_This README was generated with the assistance of Cascade, an AI coding assistant._
