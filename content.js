@@ -230,23 +230,8 @@ function processChatElements() {
         }
     });
 
-    // --- Process Assistant Responses (if selector is provided) ---
-    if (selectors.responses) {
-        const responseElements = document.querySelectorAll(selectors.responses);
-        responseElements.forEach((responseElement, index) => {
-            const navItemSpecificId = `response-nav-item-${index}`;
-            
-            try {
-                const textContent = currentProvider.extractTextContent(responseElement);
-                if (textContent) {
-                    const summary = generateSummary(textContent);
-                    addNavItem(`<em>Response ${index + 1}:</em> ${summary}`, 'response', responseElement, navItemSpecificId);
-                }
-            } catch (error) {
-                console.warn(`AI Navigator: Error processing response element:`, error, responseElement);
-            }
-        });
-    }
+    // Note: Only processing user queries for navigation
+    // Assistant responses are not included in the navigation sidebar
 }
 
 

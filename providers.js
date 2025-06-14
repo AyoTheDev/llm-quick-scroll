@@ -170,15 +170,15 @@ class ClaudeProvider extends AIProvider {
 
     getSelectors() {
         return {
-            queries: '[data-is-streaming="false"][data-message-author-role="human"]',
+            queries: '[data-testid="user-message"]',
             queryText: '.whitespace-pre-wrap',
-            responses: '[data-is-streaming="false"][data-message-author-role="assistant"]',
-            responseText: '.whitespace-pre-wrap',
-            chatContainer: 'main',
+            responses: '[data-is-streaming="false"]',
+            responseText: '.grid-cols-1.grid',
+            chatContainer: '.flex-1.flex.flex-col',
             mainContent: [
                 'main',
-                '[role="main"]',
-                '.conversation-container'
+                '.flex-1',
+                '.max-w-3xl'
             ]
         };
     }
@@ -192,8 +192,33 @@ class ClaudeProvider extends AIProvider {
     }
 
     extractTextContent(element) {
-        const textContainer = element.querySelector(this.getSelectors().queryText);
-        return textContainer ? textContainer.innerText : element.innerText;
+        // For user messages, text is in .whitespace-pre-wrap paragraphs
+        const userMessageContainer = element.querySelector('[data-testid="user-message"]');
+        if (userMessageContainer) {
+            // Get all paragraphs with whitespace-pre-wrap inside user message
+            const textParagraphs = userMessageContainer.querySelectorAll('.whitespace-pre-wrap');
+            if (textParagraphs.length > 0) {
+                return Array.from(textParagraphs).map(p => p.innerText).join(' ');
+            }
+        }
+        
+        // For assistant messages, check if element has data-is-streaming attribute
+        if (element.hasAttribute('data-is-streaming')) {
+            // Look for the content grid container
+            const contentContainer = element.querySelector('.grid-cols-1.grid');
+            if (contentContainer) {
+                return contentContainer.innerText;
+            }
+        }
+        
+        // Fallback: look for any .whitespace-pre-wrap in the element
+        const anyTextContainer = element.querySelector('.whitespace-pre-wrap');
+        if (anyTextContainer) {
+            return anyTextContainer.innerText;
+        }
+        
+        // Final fallback to element text
+        return element.innerText;
     }
 }
 
@@ -211,15 +236,15 @@ class AIStudioProvider extends AIProvider {
 
     getSelectors() {
         return {
-            queries: '.user-message',
-            queryText: '.message-content',
-            responses: '.model-message',
-            responseText: '.message-content',
-            chatContainer: '.chat-container',
+            queries: '[data-turn-role="User"]',
+            queryText: 'ms-text-chunk',
+            responses: '[data-turn-role="Model"]',
+            responseText: 'ms-text-chunk',
+            chatContainer: 'ms-chat-turn',
             mainContent: [
                 'main',
                 '[role="main"]',
-                '.main-content'
+                '.ng-star-inserted'
             ]
         };
     }
@@ -233,8 +258,34 @@ class AIStudioProvider extends AIProvider {
     }
 
     extractTextContent(element) {
-        const textContainer = element.querySelector(this.getSelectors().queryText);
-        return textContainer ? textContainer.innerText : element.innerText;
+        // Look for ms-text-chunk elements within the turn
+        const textChunks = element.querySelectorAll('ms-text-chunk');
+        if (textChunks.length > 0) {
+            // Get text from all chunks and combine them
+            return Array.from(textChunks).map(chunk => {
+                // Look for the actual text content within cmark nodes
+                const cmarkNodes = chunk.querySelectorAll('ms-cmark-node span');
+                if (cmarkNodes.length > 0) {
+                    return Array.from(cmarkNodes).map(node => node.innerText).join(' ');
+                }
+                return chunk.innerText;
+            }).join(' ');
+        }
+        
+        // Fallback: look for any span elements with text content
+        const textSpans = element.querySelectorAll('span.ng-star-inserted');
+        if (textSpans.length > 0) {
+            const textContent = Array.from(textSpans)
+                .map(span => span.innerText)
+                .filter(text => text && text.trim().length > 0)
+                .join(' ');
+            if (textContent) {
+                return textContent;
+            }
+        }
+        
+        // Final fallback to element text
+        return element.innerText;
     }
 }
 
