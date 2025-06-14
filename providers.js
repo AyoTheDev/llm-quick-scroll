@@ -85,7 +85,11 @@ class GeminiProvider extends AIProvider {
                 '[role="main"]',
                 '.main-content',
                 'body > div:first-child > div:nth-child(2)'
-            ]
+            ],
+            // Input detection selectors
+            inputField: 'textarea[placeholder*="Enter a prompt"], input[type="text"]',
+            submitButton: 'button[aria-label="Send message"], button[type="submit"]',
+            inputContainer: '.input-container, form'
         };
     }
 
@@ -126,7 +130,11 @@ class ChatGPTProvider extends AIProvider {
                 'main',
                 '[role="main"]',
                 '.flex-1'
-            ]
+            ],
+            // Input detection selectors
+            inputField: '#prompt-textarea, textarea[placeholder*="Message"]',
+            submitButton: 'button[data-testid="send-button"], button[aria-label="Send message"]',
+            inputContainer: 'form, .composer-parent'
         };
     }
 
@@ -179,7 +187,11 @@ class ClaudeProvider extends AIProvider {
                 'main',
                 '.flex-1',
                 '.max-w-3xl'
-            ]
+            ],
+            // Input detection selectors
+            inputField: '[contenteditable="true"]',
+            submitButton: 'button[aria-label="Send message"]',
+            inputContainer: '.flex.flex-col.bg-bg-000'
         };
     }
 
@@ -245,7 +257,11 @@ class AIStudioProvider extends AIProvider {
                 'main',
                 '[role="main"]',
                 '.chat-container'
-            ]
+            ],
+            // Input detection selectors
+            inputField: 'textarea, input[type="text"]',
+            submitButton: 'button[aria-label="Send"], button[type="submit"]',
+            inputContainer: '.input-area, form'
         };
     }
 

@@ -633,6 +633,63 @@ function observeChatContainer() {
 
     observer.observe(chatContainer, { childList: true, subtree: true });
     console.log(`AI Navigator: MutationObserver started for ${currentProvider.name}.`);
+    
+    // Add input event listeners for immediate question detection
+    setupInputListeners();
+}
+
+/**
+ * Sets up input event listeners for immediate question detection
+ */
+function setupInputListeners() {
+    if (!currentProvider) {
+        console.error('AI Navigator: No provider available for setting up input listeners');
+        return;
+    }
+
+    const selectors = currentProvider.getSelectors();
+    console.log(`AI Navigator: Setting up input listeners for ${currentProvider.name}`);
+
+    // Listen for Enter key in input fields
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            const inputField = document.querySelector(selectors.inputField);
+            if (inputField && (inputField.contains(e.target) || inputField === e.target)) {
+                console.log(`AI Navigator: Enter key detected in input field for ${currentProvider.name}`);
+                // Small delay to allow the message to be processed and added to DOM
+                setTimeout(() => {
+                    processChatElements();
+                }, 200);
+            }
+        }
+    });
+
+    // Listen for submit button clicks
+    document.addEventListener('click', (e) => {
+        const submitButton = document.querySelector(selectors.submitButton);
+        if (submitButton && (submitButton.contains(e.target) || submitButton === e.target || 
+            e.target.closest(selectors.submitButton))) {
+            console.log(`AI Navigator: Submit button clicked for ${currentProvider.name}`);
+            // Small delay to allow the message to be processed and added to DOM
+            setTimeout(() => {
+                processChatElements();
+            }, 200);
+        }
+    });
+
+    // Listen for form submissions as additional fallback
+    document.addEventListener('submit', (e) => {
+        const inputContainer = document.querySelector(selectors.inputContainer);
+        if (inputContainer && inputContainer.contains(e.target)) {
+            console.log(`AI Navigator: Form submission detected for ${currentProvider.name}`);
+            // Small delay to allow the message to be processed and added to DOM
+            setTimeout(() => {
+                processChatElements();
+            }, 200);
+        }
+    });
+
+    console.log(`AI Navigator: Input listeners set up for ${currentProvider.name}`);
 }
 
 // --- Search Functions ---
