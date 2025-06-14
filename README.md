@@ -14,19 +14,37 @@ Gemini Quick Scroll is a Google Chrome extension designed to enhance your naviga
 
 ## Installation
 
-To install and use Gemini Quick Scroll locally, follow these steps:
+### Quick Install (Recommended)
 
-1.  **Download or Clone the Repository:**
-    *   If you have git installed, clone the repository: `git clone https://github.com/AyoTheDev/llm-quick-scroll` (You'll need to replace `https://github.com/AyoTheDev/llm-quick-scroll` with your actual repository URL if you want users to clone it)
-    *   Otherwise, download the project files as a ZIP and extract them to a local folder.
+1. **Download the Pre-built Extension:**
+   - Download `quick-scroll.zip` from the root of this repository
+   - Extract the ZIP file to a local folder
 
-2.  **Load the Extension in Chrome:**
-    *   Open Google Chrome.
-    *   Navigate to `chrome://extensions`.
-    *   Enable **Developer mode** by toggling the switch in the top right corner.
-    *   Click on the **Load unpacked** button that appears.
-    *   Select the directory where you cloned or extracted the project files (the directory containing `manifest.json`).
-    *   The Gemini Quick Scroll extension should now be loaded and active.
+2. **Load the Extension in Chrome:**
+   - Open Google Chrome
+   - Navigate to `chrome://extensions`
+   - Enable **Developer mode** by toggling the switch in the top right corner
+   - Click **Load unpacked**
+   - Select the extracted `quick-scroll` folder
+   - The extension will be loaded and active immediately
+
+### Development Install
+
+If you want to modify the code or contribute:
+
+1. **Clone the Repository:**
+   ```bash
+   git clone https://github.com/AyoTheDev/gemini-quick-scroll.git
+   cd gemini-quick-scroll
+   ```
+
+2. **Load the Extension in Chrome:**
+   - Open Google Chrome
+   - Navigate to `chrome://extensions`
+   - Enable **Developer mode** by toggling the switch in the top right corner
+   - Click **Load unpacked**
+   - Select the project directory (containing `manifest.json`)
+   - The extension will be loaded and active
 
 ## How to Use
 
