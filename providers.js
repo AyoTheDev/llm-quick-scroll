@@ -240,11 +240,11 @@ class AIStudioProvider extends AIProvider {
             queryText: 'ms-text-chunk',
             responses: '[data-turn-role="Model"]',
             responseText: 'ms-text-chunk',
-            chatContainer: 'ms-chat-turn',
+            chatContainer: 'ms-autoscroll-container',
             mainContent: [
                 'main',
                 '[role="main"]',
-                '.ng-star-inserted'
+                '.chat-container'
             ]
         };
     }

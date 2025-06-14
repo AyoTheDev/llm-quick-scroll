@@ -13,6 +13,136 @@ let lastProcessedQueryId = -1;
 let lastProcessedResponseId = -1;
 let observerTimeout;
 let currentProvider; // Current AI provider instance
+let sessionQueries = []; // Persistent storage for queries in current session
+
+// --- Session Management ---
+
+/**
+ * Gets a unique session key based on the current page URL and provider
+ * @returns {string} Session storage key
+ */
+function getSessionKey() {
+    const url = window.location.href;
+    const providerName = currentProvider ? currentProvider.name : 'unknown';
+    return `ai-navigator-session-${providerName}-${btoa(url).slice(0, 20)}`;
+}
+
+/**
+ * Loads persisted queries from session storage
+ * @returns {Array} Array of stored query objects
+ */
+function loadSessionQueries() {
+    try {
+        const sessionKey = getSessionKey();
+        const stored = sessionStorage.getItem(sessionKey);
+        return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+        console.warn('AI Navigator: Error loading session queries:', error);
+        return [];
+    }
+}
+
+/**
+ * Saves current queries to session storage
+ */
+function saveSessionQueries() {
+    try {
+        const sessionKey = getSessionKey();
+        sessionStorage.setItem(sessionKey, JSON.stringify(sessionQueries));
+    } catch (error) {
+        console.warn('AI Navigator: Error saving session queries:', error);
+    }
+}
+
+/**
+ * Adds a new query to the session if it doesn't already exist
+ * @param {Object} queryData - Query data object {id, text, element, index}
+ */
+function addQueryToSession(queryData) {
+    // Check if query already exists (by ID or text)
+    const existingIndex = sessionQueries.findIndex(q => 
+        q.id === queryData.id || q.text === queryData.text
+    );
+    
+    if (existingIndex === -1) {
+        sessionQueries.push(queryData);
+        saveSessionQueries();
+        return true; // New query added
+    }
+    return false; // Query already existed
+}
+
+/**
+ * Rebuilds navigation from session data and current DOM elements
+ */
+function rebuildNavigationFromSession() {
+    if (!navBar) return;
+
+    // Clear existing nav items
+    const existingNavItems = navBar.querySelectorAll('.nav-item');
+    existingNavItems.forEach(item => item.remove());
+    allNavItems = [];
+
+    // Rebuild from session data
+    sessionQueries.forEach((queryData, index) => {
+        // Try to find the element in the current DOM
+        let targetElement = null;
+        
+        // First try to find by stored element reference (if still in DOM)
+        if (queryData.elementId) {
+            targetElement = document.getElementById(queryData.elementId);
+        }
+        
+        // If not found, try to find by content matching
+        if (!targetElement) {
+            const selectors = currentProvider.getSelectors();
+            const queryElements = document.querySelectorAll(selectors.queries);
+            
+            for (const element of queryElements) {
+                try {
+                    const elementText = currentProvider.extractTextContent(element);
+                    if (elementText && elementText.trim() === queryData.text.trim()) {
+                        targetElement = element;
+                        break;
+                    }
+                } catch (error) {
+                    // Continue searching
+                }
+            }
+        }
+        
+        // Create a placeholder element if original not found (for virtual scrolling)
+        if (!targetElement) {
+            targetElement = createPlaceholderElement(queryData);
+        }
+        
+        const summary = generateSummary(queryData.text);
+        addNavItem(`<strong>${index + 1}.</strong> ${summary}`, 'query', targetElement, `session-query-${index}`);
+    });
+}
+
+/**
+ * Creates a placeholder element for queries not currently in DOM (virtual scrolling)
+ * @param {Object} queryData - Query data object
+ * @returns {HTMLElement} Placeholder element
+ */
+function createPlaceholderElement(queryData) {
+    const placeholder = document.createElement('div');
+    placeholder.className = 'ai-nav-placeholder';
+    placeholder.dataset.queryText = queryData.text;
+    placeholder.dataset.queryId = queryData.id;
+    placeholder.style.display = 'none'; // Hidden placeholder
+    document.body.appendChild(placeholder);
+    
+    // Add click handler to scroll to query (for AI Studio virtual scrolling)
+    placeholder.addEventListener('click', () => {
+        // For AI Studio, we might need to trigger scrolling to make the element visible
+        console.log(`AI Navigator: Attempting to navigate to: ${queryData.text.substring(0, 50)}...`);
+        // This could be enhanced with provider-specific navigation logic
+    });
+    
+    return placeholder;
+}
 
 // --- Core Functions ---
 
@@ -201,27 +331,37 @@ function processChatElements() {
         return;
     }
 
-    if (navBar) {
-        const existingNavItems = navBar.querySelectorAll('.nav-item');
-        existingNavItems.forEach(item => item.remove());
-        allNavItems = []; // Clear the stored items array
-    } else {
-        console.warn('AI Navigator: navBar not found during processChatElements. Cannot clear or add items.');
-        return; // Stop if navBar isn't initialized
-    }
-
     const selectors = currentProvider.getSelectors();
 
     // --- Process User Queries ---
     const queryElements = document.querySelectorAll(selectors.queries);
+    let newQueriesFound = false;
+
     queryElements.forEach((queryElement, index) => {
-        const navItemSpecificId = `query-nav-item-${index}`;
-        
         try {
             const textContent = currentProvider.extractTextContent(queryElement);
-            if (textContent) {
-                const summary = generateSummary(textContent);
-                addNavItem(`<strong>${index + 1}.</strong> ${summary}`, 'query', queryElement, navItemSpecificId);
+            if (textContent && textContent.trim()) {
+                // Create query data object
+                const queryId = queryElement.id || `query-${Date.now()}-${index}`;
+                const queryData = {
+                    id: queryId,
+                    text: textContent.trim(),
+                    elementId: queryElement.id,
+                    timestamp: Date.now(),
+                    index: sessionQueries.length
+                };
+
+                // Ensure element has an ID for future reference
+                if (!queryElement.id) {
+                    queryElement.id = queryId;
+                    queryData.elementId = queryId;
+                }
+
+                // Add to session if it's new
+                if (addQueryToSession(queryData)) {
+                    newQueriesFound = true;
+                    console.log(`AI Navigator: Added new query to session: ${textContent.substring(0, 50)}...`);
+                }
             } else {
                 console.warn(`AI Navigator: Could not extract text content for query element:`, queryElement);
             }
@@ -229,6 +369,13 @@ function processChatElements() {
             console.warn(`AI Navigator: Error processing query element:`, error, queryElement);
         }
     });
+
+    // Rebuild navigation from complete session data
+    rebuildNavigationFromSession();
+
+    if (newQueriesFound) {
+        console.log(`AI Navigator: Session now contains ${sessionQueries.length} total queries`);
+    }
 
     // Note: Only processing user queries for navigation
     // Assistant responses are not included in the navigation sidebar
@@ -370,7 +517,12 @@ function init() {
     
     console.log(`AI Navigator: Using provider: ${currentProvider.name}`);
     
+    // Load existing session data
+    sessionQueries = loadSessionQueries();
+    console.log(`AI Navigator: Loaded ${sessionQueries.length} queries from session storage`);
+    
     createNavBar();
+    
     // Initial processing of any existing elements
     // It might take a moment for the UI to fully render, so a small delay or retry mechanism can be helpful
     setTimeout(() => {
