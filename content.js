@@ -67,6 +67,12 @@ function handleRefreshClick(event) {
     const refreshBtn = document.getElementById('ai-nav-refresh-btn');
     if (!refreshBtn) return;
     
+    // Clear search bar if it has content
+    if (searchInput && searchInput.value.trim()) {
+        clearSearch();
+        console.log('AI Navigator: Search cleared during refresh');
+    }
+    
     // Disable button and show loading state
     refreshBtn.disabled = true;
     refreshBtn.classList.add('loading');
@@ -483,8 +489,9 @@ function toggleNav() {
 
 /**
  * Adjusts the main content area to make space for the sidebar.
+ * @param {number} retryCount - Number of times to retry finding the element
  */
-function adjustMainContentLayout() {
+function adjustMainContentLayout(retryCount = 0) {
     if (!currentProvider) return;
     
     const layoutConfig = currentProvider.getLayoutConfig();
@@ -496,7 +503,10 @@ function adjustMainContentLayout() {
     let mainContentArea = null;
     for (const selector of mainContentSelectors) {
         mainContentArea = document.querySelector(selector);
-        if (mainContentArea) break;
+        if (mainContentArea) {
+            console.log(`AI Navigator: Found main content area using selector: ${selector}`, mainContentArea);
+            break;
+        }
     }
 
     if (mainContentArea) {
@@ -508,10 +518,38 @@ function adjustMainContentLayout() {
             console.log('AI Navigator: Applied margin-right to main content area:', mainContentArea);
         }
     } else {
-        // As a fallback, if a specific main content area isn't found,
-        // we might need to adjust the body or a primary wrapper.
-        // For now, let's log that it wasn't found.
-        console.warn(`AI Navigator: Could not identify ${currentProvider.name} main content area to adjust layout.`);
+        // Retry mechanism for when DOM isn't fully loaded yet
+        if (retryCount < 3) {
+            console.log(`AI Navigator: Main content area not found for ${currentProvider.name}, retrying in 1 second... (attempt ${retryCount + 1}/3)`);
+            setTimeout(() => {
+                adjustMainContentLayout(retryCount + 1);
+            }, 1000);
+        } else {
+            // Final attempt - try some common fallback selectors
+            const fallbackSelectors = [
+                'body > div:first-child',
+                '[role="main"]',
+                'main',
+                '.main-content',
+                '.content',
+                '#app',
+                '#root'
+            ];
+            
+            for (const selector of fallbackSelectors) {
+                mainContentArea = document.querySelector(selector);
+                if (mainContentArea) {
+                    console.log(`AI Navigator: Found fallback content area using: ${selector}`, mainContentArea);
+                    if (navBar && !navBar.classList.contains('collapsed')) {
+                        mainContentArea.style.marginRight = mainContentMargin;
+                        console.log('AI Navigator: Applied margin-right to fallback content area');
+                    }
+                    return;
+                }
+            }
+            
+            console.warn(`AI Navigator: Could not identify ${currentProvider.name} main content area to adjust layout after 3 attempts. Sidebar will still work but layout may not be optimal.`);
+        }
     }
 }
 
