@@ -58,6 +58,44 @@ function hideLoadingState() {
 }
 
 /**
+ * Handles refresh button click with loading state and error handling
+ */
+function handleRefreshClick(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const refreshBtn = document.getElementById('ai-nav-refresh-btn');
+    if (!refreshBtn) return;
+    
+    // Disable button and show loading state
+    refreshBtn.disabled = true;
+    refreshBtn.classList.add('loading');
+    
+    console.log('AI Navigator: Refresh button clicked, starting data refresh...');
+    
+    try {
+        refreshData();
+        
+        // Re-enable button after refresh completes
+        setTimeout(() => {
+            refreshBtn.disabled = false;
+            refreshBtn.classList.remove('loading');
+            console.log('AI Navigator: Refresh button re-enabled');
+        }, 600); // Slightly longer than refreshData delay to ensure completion
+        
+    } catch (error) {
+        console.error('AI Navigator: Error during refresh:', error);
+        
+        // Re-enable button even if refresh fails
+        refreshBtn.disabled = false;
+        refreshBtn.classList.remove('loading');
+        
+        // Could show error feedback here in the future
+        console.warn('AI Navigator: Refresh operation failed, button re-enabled');
+    }
+}
+
+/**
  * Refreshes all data - clears session and reprocesses page
  */
 function refreshData() {
@@ -70,9 +108,15 @@ function refreshData() {
     
     // Process with a small delay to show loading state
     setTimeout(() => {
-        processChatElements();
-        hideLoadingState();
-        console.log('AI Navigator: Data refresh completed');
+        try {
+            processChatElements();
+            hideLoadingState();
+            console.log('AI Navigator: Data refresh completed');
+        } catch (error) {
+            hideLoadingState();
+            console.error('AI Navigator: Error during data refresh:', error);
+            throw error; // Re-throw to be caught by handleRefreshClick
+        }
     }, 500);
 }
 
@@ -360,9 +404,15 @@ function createNavBar() {
     navBar.style.top = `${layoutConfig.topOffset}px`;
     navBar.style.height = `calc(100vh - ${layoutConfig.topOffset}px)`;
     
-    // Create header with provider-specific title
+    // Create header with provider-specific title and refresh button
     const header = document.createElement('h3');
-    header.innerHTML = `${currentProvider.getNavTitle()} <span id="ai-nav-collapse-btn" title="Collapse Navigation">&raquo;</span>`;
+    header.innerHTML = `<button id="ai-nav-refresh-btn" title="Refresh Chat Navigation" aria-label="Refresh Chat Navigation">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="m20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path>
+        </svg>
+    </button>${currentProvider.getNavTitle()} <span id="ai-nav-collapse-btn" title="Collapse Navigation">&raquo;</span>`;
     navBar.appendChild(header);
     
     // Create search container
@@ -396,12 +446,19 @@ function createNavBar() {
     document.body.appendChild(expandBtn);
 
     const collapseBtn = document.getElementById('ai-nav-collapse-btn');
+    const refreshBtn = document.getElementById('ai-nav-refresh-btn');
 
     if (navBar && collapseBtn && expandBtn) {
         collapseBtn.addEventListener('click', toggleNav);
         expandBtn.addEventListener('click', toggleNav);
     } else {
         console.error('AI Navigator: Could not find all necessary elements for collapse/expand functionality.');
+    }
+
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', handleRefreshClick);
+    } else {
+        console.error('AI Navigator: Could not find refresh button element.');
     }
     adjustMainContentLayout(); // Adjust layout after adding nav bar
 }

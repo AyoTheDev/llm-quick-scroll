@@ -29,6 +29,45 @@
     padding-bottom: 5px;
 }
 
+/* Refresh Button */
+#ai-nav-refresh-btn {
+    background: none;
+    border: none;
+    color: #bdc1c6;
+    cursor: pointer;
+    padding: 4px;
+    margin-right: 8px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease-in-out;
+    flex-shrink: 0; /* Prevent button from shrinking */
+}
+
+#ai-nav-refresh-btn:hover:not(:disabled) {
+    background-color: #3c4043;
+    color: #e8eaed;
+}
+
+#ai-nav-refresh-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#ai-nav-refresh-btn.loading svg {
+    animation: refresh-spin 1s linear infinite;
+}
+
+@keyframes refresh-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
 /* Search Container */
 .search-container {
     position: relative;
