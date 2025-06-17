@@ -16,6 +16,8 @@ let currentProvider; // Current AI provider instance
 let sessionQueries = []; // Persistent storage for queries in current session
 let isLoading = false; // Loading state for data refresh
 let currentUrl = window.location.href; // Track current URL for change detection
+let currentNavigationIndex = -1; // Track currently highlighted nav item for keyboard navigation
+let keyboardNavigationActive = false; // Track if keyboard navigation is active
 
 // --- Loading State Management ---
 
@@ -31,6 +33,7 @@ function showLoadingState() {
     const existingNavItems = navBar.querySelectorAll('.nav-item');
     existingNavItems.forEach(item => item.remove());
     allNavItems = [];
+    resetNavigationIndex(); // Reset keyboard navigation when clearing items
     
     // Create loading indicator
     const loadingContainer = document.createElement('div');
@@ -827,6 +830,9 @@ function filterNavItems(searchTerm) {
         
         item.style.display = matchesSearch ? 'block' : 'none';
     });
+    
+    // Reset navigation index when search results change
+    resetNavigationIndex();
 }
 
 /**
@@ -839,6 +845,126 @@ function clearSearch() {
         searchClear.style.display = 'none';
     }
     filterNavItems(''); // Show all items
+}
+
+// --- Keyboard Navigation Functions ---
+
+/**
+ * Handles arrow key navigation through the sidebar items
+ * @param {KeyboardEvent} event - The keyboard event
+ */
+function handleArrowNavigation(event) {
+    // Only handle arrow keys when sidebar is visible and has items
+    if (!navBar || navBar.classList.contains('collapsed') || allNavItems.length === 0) {
+        return;
+    }
+
+    // Only handle arrow keys and Enter/Escape
+    if (!['ArrowUp', 'ArrowDown', 'Enter', 'Escape'].includes(event.key)) {
+        return;
+    }
+
+    // Don't interfere when user is typing in search or input fields
+    const activeElement = document.activeElement;
+    if (activeElement && (
+        activeElement.tagName === 'INPUT' || 
+        activeElement.tagName === 'TEXTAREA' || 
+        activeElement.contentEditable === 'true'
+    )) {
+        // But allow Escape to clear search if in search field
+        if (event.key === 'Escape' && activeElement === searchInput) {
+            clearSearch();
+            clearNavigationHighlight();
+            event.preventDefault();
+        }
+        return;
+    }
+
+    // Get only visible nav items for navigation
+    const visibleNavItems = allNavItems.filter(item => 
+        item.style.display !== 'none' && item.offsetParent !== null
+    );
+    
+    if (visibleNavItems.length === 0) {
+        return;
+    }
+
+    event.preventDefault(); // Prevent default browser behavior
+
+    switch (event.key) {
+        case 'ArrowDown':
+            keyboardNavigationActive = true;
+            currentNavigationIndex = (currentNavigationIndex + 1) % visibleNavItems.length;
+            updateNavigationHighlight(visibleNavItems);
+            break;
+            
+        case 'ArrowUp':
+            keyboardNavigationActive = true;
+            currentNavigationIndex = currentNavigationIndex <= 0 ? 
+                visibleNavItems.length - 1 : currentNavigationIndex - 1;
+            updateNavigationHighlight(visibleNavItems);
+            break;
+            
+        case 'Enter':
+            if (keyboardNavigationActive && currentNavigationIndex >= 0) {
+                const highlightedItem = visibleNavItems[currentNavigationIndex];
+                if (highlightedItem) {
+                    highlightedItem.click(); // Trigger the existing click handler
+                }
+            }
+            break;
+            
+        case 'Escape':
+            clearNavigationHighlight();
+            break;
+    }
+}
+
+/**
+ * Updates the visual highlight for keyboard navigation
+ * @param {Array} visibleNavItems - Array of visible navigation items
+ */
+function updateNavigationHighlight(visibleNavItems) {
+    // Clear all previous highlights
+    allNavItems.forEach(item => item.classList.remove('nav-item-highlighted'));
+    
+    // Add highlight to current item
+    if (currentNavigationIndex >= 0 && currentNavigationIndex < visibleNavItems.length) {
+        const currentItem = visibleNavItems[currentNavigationIndex];
+        currentItem.classList.add('nav-item-highlighted');
+        
+        // Auto-scroll the highlighted item into view within the sidebar
+        currentItem.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+            inline: 'nearest'
+        });
+    }
+}
+
+/**
+ * Clears navigation highlight and resets navigation state
+ */
+function clearNavigationHighlight() {
+    allNavItems.forEach(item => item.classList.remove('nav-item-highlighted'));
+    currentNavigationIndex = -1;
+    keyboardNavigationActive = false;
+}
+
+/**
+ * Resets navigation index when nav items change (search, refresh, etc.)
+ */
+function resetNavigationIndex() {
+    clearNavigationHighlight();
+}
+
+/**
+ * Sets up keyboard navigation event listeners
+ */
+function setupKeyboardNavigation() {
+    // Add global keyboard event listener for arrow navigation
+    document.addEventListener('keydown', handleArrowNavigation, true);
+    console.log('AI Navigator: Keyboard navigation setup complete');
 }
 
 // --- Initialization ---
@@ -870,6 +996,7 @@ function init() {
     
     createNavBar();
     setupPageChangeDetection(); // Set up listeners for page/tab changes
+    setupKeyboardNavigation(); // Set up arrow key navigation
     
     // Initial processing of any existing elements
     // It might take a moment for the UI to fully render, so a small delay or retry mechanism can be helpful

@@ -157,6 +157,26 @@
     font-weight: 500;
 }
 
+/* Keyboard navigation highlight */
+.nav-item.nav-item-highlighted {
+    background-color: #3c4043;
+    border: 2px solid #8ab4f8;
+    box-shadow: 0 0 8px rgba(138, 180, 248, 0.3);
+    transform: translateX(2px);
+    transition: all 0.2s ease-in-out;
+}
+
+.nav-item.nav-item-highlighted:hover {
+    background-color: #3c4043; /* Maintain highlight background on hover */
+}
+
+/* Ensure highlighted state takes precedence over active state */
+.nav-item.nav-item-highlighted.active {
+    background-color: #5a7db8; /* Darker blue blend for both highlighted and active */
+    color: #e8eaed;
+    border-color: #8ab4f8;
+}
+
 /* Scrollbar styling for webkit browsers */
 #ai-nav-bar::-webkit-scrollbar {
     width: 8px;
