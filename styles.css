@@ -29,14 +29,21 @@
     padding-bottom: 5px;
 }
 
-/* Refresh Button */
-#ai-nav-refresh-btn {
+/* Header buttons container */
+.header-buttons {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+/* Header Control Buttons */
+#ai-nav-refresh-btn,
+#ai-nav-focus-mode-btn {
     background: none;
     border: none;
     color: #bdc1c6;
     cursor: pointer;
     padding: 4px;
-    margin-right: 8px;
     border-radius: 4px;
     display: inline-flex;
     align-items: center;
@@ -45,7 +52,8 @@
     flex-shrink: 0; /* Prevent button from shrinking */
 }
 
-#ai-nav-refresh-btn:hover:not(:disabled) {
+#ai-nav-refresh-btn:hover:not(:disabled),
+#ai-nav-focus-mode-btn:hover {
     background-color: #3c4043;
     color: #e8eaed;
 }
@@ -57,6 +65,17 @@
 
 #ai-nav-refresh-btn.loading svg {
     animation: refresh-spin 1s linear infinite;
+}
+
+/* Focus Mode Button Active State */
+#ai-nav-focus-mode-btn.active {
+    background-color: #8ab4f8;
+    color: #202124;
+}
+
+#ai-nav-focus-mode-btn.active:hover {
+    background-color: #a8c7fa;
+    color: #202124;
 }
 
 @keyframes refresh-spin {

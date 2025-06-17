@@ -87,7 +87,13 @@ class GeminiProvider extends AIProvider {
                 'body > div:first-child > div:nth-child(2)'
             ],
             // Input detection selectors
-            inputField: 'textarea[placeholder*="Enter a prompt"], input[type="text"]',
+            inputField: [
+                'rich-textarea .ql-editor[contenteditable="true"]',
+                'textarea[placeholder*="Enter a prompt"]', 
+                'textarea[placeholder*="Ask Gemini"]',
+                'div[contenteditable="true"][role="textbox"]',
+                'input[type="text"]'
+            ],
             submitButton: 'button[aria-label="Send message"], button[type="submit"]',
             inputContainer: '.input-container, form'
         };
@@ -132,7 +138,13 @@ class ChatGPTProvider extends AIProvider {
                 '.flex-1'
             ],
             // Input detection selectors
-            inputField: '#prompt-textarea, textarea[placeholder*="Message"]',
+            inputField: [
+                '#prompt-textarea',
+                'div[contenteditable="true"].ProseMirror',
+                'textarea[placeholder*="Message"]',
+                'textarea[placeholder*="Ask anything"]',
+                'div[contenteditable="true"][role="textbox"]'
+            ],
             submitButton: 'button[data-testid="send-button"], button[aria-label="Send message"]',
             inputContainer: 'form, .composer-parent'
         };
@@ -189,7 +201,12 @@ class ClaudeProvider extends AIProvider {
                 '.max-w-3xl'
             ],
             // Input detection selectors
-            inputField: '[contenteditable="true"]',
+            inputField: [
+                'div[contenteditable="true"].ProseMirror',
+                'div[aria-label*="Write your prompt"]',
+                'div[contenteditable="true"][role="textbox"]',
+                '[contenteditable="true"]'
+            ],
             submitButton: 'button[aria-label="Send message"]',
             inputContainer: '.flex.flex-col.bg-bg-000'
         };
@@ -259,7 +276,13 @@ class AIStudioProvider extends AIProvider {
                 '.chat-container'
             ],
             // Input detection selectors
-            inputField: 'textarea, input[type="text"]',
+            inputField: [
+                'textarea[placeholder*="Start typing a prompt"]',
+                'textarea.cdk-textarea-autosize',
+                'textarea',
+                'input[type="text"]',
+                'div[contenteditable="true"]'
+            ],
             submitButton: 'button[aria-label="Send"], button[type="submit"]',
             inputContainer: '.input-area, form'
         };
