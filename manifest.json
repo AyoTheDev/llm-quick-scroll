@@ -3,8 +3,6 @@
   "name": "AI Chat Navigator",
   "version": "6.0",
   "description": "Adds a navigation bar to quickly scroll through chat messages on AI services (Gemini, ChatGPT, Claude, AI Studio)",
-  "permissions": [
-  ],
   "content_scripts": [
     {
       "matches": [
