@@ -277,6 +277,21 @@ body.ai-nav-collapsed #ai-nav-expand-btn {
     display: block;
 }
 
+/* Initial glow animation for expand button */
+@keyframes gentle-glow {
+    0%, 100% {
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(138, 180, 248, 0.6), 0 0 30px rgba(138, 180, 248, 0.4);
+    }
+}
+
+#ai-nav-expand-btn.initial-glow {
+    animation: gentle-glow 2s ease-in-out 3;
+    animation-delay: 0.5s;
+}
+
 /* Loading state styles */
 .nav-loading-container {
     display: flex;

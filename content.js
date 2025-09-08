@@ -499,7 +499,13 @@ function createNavBar() {
     expandBtn.id = 'ai-nav-expand-btn';
     expandBtn.title = 'Expand Navigation';
     expandBtn.innerHTML = '&laquo;';
+    expandBtn.classList.add('initial-glow'); // Add glow animation on initial load
     document.body.appendChild(expandBtn);
+    
+    // Remove glow after animation completes (2s duration * 3 iterations + 0.5s delay = 6.5s)
+    setTimeout(() => {
+        expandBtn.classList.remove('initial-glow');
+    }, 6500);
 
     const collapseBtn = document.getElementById('ai-nav-collapse-btn');
     const refreshBtn = document.getElementById('ai-nav-refresh-btn');
@@ -507,7 +513,10 @@ function createNavBar() {
 
     if (navBar && collapseBtn && expandBtn) {
         collapseBtn.addEventListener('click', toggleNav);
-        expandBtn.addEventListener('click', toggleNav);
+        expandBtn.addEventListener('click', (e) => {
+            expandBtn.classList.remove('initial-glow'); // Remove glow on first interaction
+            toggleNav();
+        });
     } else {
         console.error('AI Navigator: Could not find all necessary elements for collapse/expand functionality.');
     }
