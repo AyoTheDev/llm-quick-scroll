@@ -447,6 +447,7 @@ function createNavBar() {
     const layoutConfig = currentProvider.getLayoutConfig();
     navBar = document.createElement('div');
     navBar.id = 'ai-nav-bar';
+    navBar.classList.add('collapsed'); // Start with sidebar collapsed by default
     navBar.style.top = `${layoutConfig.topOffset}px`;
     navBar.style.height = `calc(100vh - ${layoutConfig.topOffset}px)`;
     
@@ -488,6 +489,7 @@ function createNavBar() {
     navBar.appendChild(searchContainer);
     
     document.body.appendChild(navBar);
+    document.body.classList.add('ai-nav-collapsed'); // Start with body class for collapsed state
     
     // Initialize search functionality
     searchInput.addEventListener('input', handleSearch);
